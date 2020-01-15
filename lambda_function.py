@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 
 # ftp login credentials
 credentials = {
-		'host': os.environ['FTP_HOST'],
-		'user': os.environ['FTP_USR'],	
-		'passwd': os.environ['FTP_PASSWD']
+		'host': "ftp.controle.eng.br",
+		'user': "controle01",	
+		'passwd': "labens"
 	}
 
 def show_last_update_time():    
@@ -21,8 +21,6 @@ def show_last_update_time():
         print('Not able to connect to FTP')
         return
     
-    current_time = datetime.utcnow()
-
     # gets folders and files on the ftp server
     all_folders = ftp.nlst()
 
@@ -36,8 +34,12 @@ def show_last_update_time():
     # sets alphabetical order
     folder_list.sort()
     
+    # gets current time
+    current_time = datetime.utcnow()
+    
     # creates dictionary to store timestamps
     last_update = {}
+    last_update["current_time"] = current_time.isoformat()
 
     for folder in folder_list:
         # info about available files
@@ -58,19 +60,23 @@ def show_last_update_time():
             # gets last updated time
             timestamp = file[1]['modify']
             file_time = parser.parse(timestamp)
-            time_difference = current_time - file_time
+            
+            # gets the timedifference in seconds
+            if current_time > file_time:
+                time_diff = current_time - file_time
+                time_diff_in_s = time_diff.total_seconds()
+            else:
+                time_diff_in_s = 0
             
             # creates 2nd level dictionary and saves timestamp
-            last_update[folder][name] = time_difference
+            last_update[folder][name[4:10]] = time_diff_in_s
 
     # close ftp connections
     ftp.quit()
     
-    # prints results
-    print("## Last updated times")
-    print(last_update)
-    
-
+    # converts dict to JSON
+    last_update_JSON = json.dumps(last_update)
+    print(last_update_JSON)
 
 def lambda_handler(event, context):
     # change later to secrets or so
