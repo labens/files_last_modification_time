@@ -15,32 +15,6 @@ def get_path_info(path):
     
     return path_info
 
-# def generate_path(file_info):
-#     # filename = dispositivo_subclasse_local_tab-tech_identificacao_AAAA-MM-DD.csv
-
-#     # reconstructs full name path
-#     if file_info['dispositivo'] == 'dat':
-#         dispositivo = 'dataloggers'
-#     elif file_info['dispositivo'] == 'inv':
-#         dispositivo = 'inversores'
-#     else:
-#         dispositivo = file_info['dispositivo']
-    
-#     path = (file_info['ano']           + '/' +
-#             file_info['mes']           + '/' +
-#             dispositivo                + '/' +
-#             file_info['tab-ou-tech']   + '/' +
-#             file_info['dispositivo']   + '_' +
-#             file_info['subclasse']     + '_' +
-#             file_info['tab_ou_tech']   + '_' +
-#             file_info['identificacao'] + '_' +
-#             file_info['ano']           + '-' +
-#             file_info['mes']           + '-' +
-#             file_info['dia']           + '-' +
-#             '.csv')
-    
-#     return path
-
 def get_file_info(file_path):   
     # filepath = AAAA / MM / dispositivo / tab-ou-tech / filename
     path_info = get_path_info(file_path)
@@ -180,10 +154,10 @@ if __name__ == "__main__":
     Logs the last modification time to the DB
     """
 
-    DB_name = r"database.db" 
+    DB_path = r"database.db" 
 
     # connects to the SQlite DB
-    conn = database.create_connection(DB_name)
+    conn = database.create_connection(DB_path)
 
     # creates tables if not already available
     create_tables(conn)
