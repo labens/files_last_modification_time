@@ -10,6 +10,7 @@ def create_connection(db_file):
     conn = None
     try:
         conn = sqlite3.connect(db_file)
+        print("Connected to {}".format(db_file))
     except Error as e:
         print(e)
  
@@ -147,37 +148,3 @@ def execute(conn, query):
         c.execute(query)
     except Error as e:
         print(e)
-
-
-def create_tables(conn, database):
-    """ create the files and updates table if not already created
-    :param conn: Connection object
-    :param database: path where to create and save the DB
-    :return:
-    """
- 
-    # int for primary key
-    sql_create_files_table = """CREATE TABLE IF NOT EXISTS files (
-                                        id integer PRIMARY KEY,
-                                        dispositivo text NOT NULL,  
-                                        subclasse text NOT NULL, 
-                                        local text NOT NULL, 
-                                        tab_ou_tech text NOT NULL, 
-                                        identificacao int NOT NULL
-                                    );"""
-
-
-    sql_create_updates_table = """CREATE TABLE IF NOT EXISTS updates (
-                                        id integer PRIMARY KEY,
-                                        file_id string NOT NULL,
-                                        measure_time text NOT NULL,
-                                        last_update_in_s int NOT NULL,
-                                        FOREIGN KEY (file_id) REFERENCES files (id)
-                                    );"""
- 
-    # creates tables table if not available
-    create_table(conn, sql_create_files_table)
-    
-    # creates updates table if not available
-    create_table(conn, sql_create_updates_table)
-
