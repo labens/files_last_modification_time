@@ -119,7 +119,7 @@ def updateDB(conn):
                         file = database.select_specific_file(conn, **file_info)
                         file_id = file[0][0] # select the id
                     else:
-                        file_id = database.create_file(conn, tuple(file_info.values()))
+                        file_id = database.create_file(conn, (file_info['local'],file_info['tab_ou_tech']))
                         new_files += 1
 
                     # gets the last modification time of the file
