@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import datetime # .isoformat()
 import os
 
@@ -5,45 +6,36 @@ import database
 
 def get_path_info(path):
     # filepath = AAAA / MM / dispositivo / tab-ou-tech / filename
-    tmp = path.split('/')    
-    path_info = {   
-        'ano'        : tmp[-5], 
+    tmp = path.split('/')
+    path_info = {
+        'ano'        : tmp[-5],
         'mes'        : tmp[-4],
         'dispositivo': tmp[-3],
         'tab_ou_tech': tmp[-2],
-        'filename'   : tmp[-1]} 
-    
+        'filename'   : tmp[-1]}
+
     return path_info
 
-def get_file_info(file_path):   
+def get_file_info(file_path):
     # filepath = AAAA / MM / dispositivo / tab-ou-tech / filename
     path_info = get_path_info(file_path)
-    
-    # filename = dispositivo_subclasse_local_tab-tech_identificacao_AAAA-MM-DD.csv
-    tmp = path_info['filename'].replace('.csv','').split('_')
-    dates = tmp[5].split('-')
-    
+
+    #filename = LOCAL-tab_ou_tech-AA-MM-DD.csv
+    tmp = path_info['filename'].replace('.csv','').split('-')
+
     # check for discrepancies
-    if dates[0] != path_info['ano']:
+    if ("20"+tmp[2]) != path_info['ano']:
         raise NameError('Ano nas pastas e no nome do arquivo estão diferentes')
-    if dates[1] != path_info['mes']:
+    if tmp[3] != path_info['mes']:
         raise NameError('Mês nas pastas e no nome do arquivo estão diferentes')
-    if tmp[0][0:3] != path_info['dispositivo'][0:3]:
-        raise NameError('Dispositivo nas pastas e no nome do arquivo estão diferentes')
-    if tmp[3] != path_info['tab_ou_tech']:
-        if tmp[3] != 'teste':
-            raise NameError('Tab-ou-tech nas pastas e no nome do arquivo estão diferentes')
-    
-    file_info = {   
-        'dispositivo'  : tmp[0],
-        'subclasse'    : tmp[1],
-        'local'        : tmp[2],
-        'tab_ou_tech'  : tmp[3],
-        'identificacao': tmp[4],
-        'ano'          : dates[0],
-        'mes'          : dates[1],
-        'dia'          : dates[2]}
-    
+
+    file_info = {
+        'local'        : tmp[0],
+        'tab_ou_tech'  : tmp[1],
+        'ano'          : tmp[2],
+        'mes'          : tmp[3],
+        'dia'          : tmp[4]}
+
     return file_info
 
 def create_tables(conn):
@@ -52,15 +44,13 @@ def create_tables(conn):
     :param database: path where to create and save the DB
     :return:
     """
- 
+
     # int for primary key
     sql_create_files_table = """CREATE TABLE IF NOT EXISTS files (
                                         id integer PRIMARY KEY,
-                                        dispositivo text NOT NULL,  
-                                        subclasse text NOT NULL, 
-                                        local text NOT NULL, 
-                                        tab_ou_tech text NOT NULL, 
-                                        identificacao int NOT NULL
+                                        local text NOT NULL,
+                                        tab_ou_tech text NOT NULL,
+                                        status int NOT NULL
                                     );"""
 
 
@@ -71,10 +61,10 @@ def create_tables(conn):
                                         last_update_in_s int NOT NULL,
                                         FOREIGN KEY (file_id) REFERENCES files (id)
                                     );"""
- 
+
     # creates tables table if not available
     database.create_table(conn, sql_create_files_table)
-    
+
     # creates updates table if not available
     database.create_table(conn, sql_create_updates_table)
 
@@ -95,7 +85,7 @@ def updateDB(conn):
     # generates the path for the current month - eg. 2020/03
     month_folder = "{:04}/{:02}".format(current_time.year, current_time.month)
     # generates the current day string - eg. 2020-03-15
-    current_date_str = "{:04}-{:02}-{:02}".format(current_time.year, current_time.month, current_time.day)
+    current_date_str = current_time.strftime("%y")+"-"+current_time.strftime("%m")+"-"+current_time.strftime("%d")
 
     # walks thought the current month files
     for dirname, _, filenames in os.walk(month_folder):
@@ -108,7 +98,7 @@ def updateDB(conn):
 
                 # checks if the filename and folder are consistent
                     # adds log if not
-                    
+
                 # remove unused fields
                 del file_info['ano']
                 del file_info['mes']
@@ -116,7 +106,7 @@ def updateDB(conn):
 
                 # connecting and modifying the DB
                 with conn:
-                
+
                     # checks if more than one file exists for this configuration
                     try:
                         file_exists = database.specific_file_exists(conn, **file_info)
@@ -127,7 +117,7 @@ def updateDB(conn):
                     # gets the file_id by creating the file or selecting it
                     if file_exists:
                         file = database.select_specific_file(conn, **file_info)
-                        file_id = file[0][0] # select the id                      
+                        file_id = file[0][0] # select the id
                     else:
                         file_id = database.create_file(conn, tuple(file_info.values()))
                         new_files += 1
@@ -143,24 +133,24 @@ def updateDB(conn):
                     except:
                         print("Error adding the current update to the updates table")
                         print(file_info)
-                    
+
     print("{:5} additions to the files table".format(new_files))
     print("{:5} additions to the updates table".format(new_updates))
     print("Updating concluded")
-                    
+
 
 if __name__ == "__main__":
-    """ 
+    """
     Logs the last modification time to the DB
     """
 
-    DB_path = r"database.db" 
+    DB_path = r"database.db"
 
     # connects to the SQlite DB
     conn = database.create_connection(DB_path)
 
     # creates tables if not already available
     create_tables(conn)
-    
+
     # logs the difference to the DB
     updateDB(conn)
