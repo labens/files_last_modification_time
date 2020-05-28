@@ -13,9 +13,9 @@ def create_connection(db_file):
         print("Connected to {}".format(db_file))
     except Error as e:
         print(e)
- 
+
     return conn
- 
+
 
 def create_table(conn, create_table_sql):
     """ create a table from the create_table_sql statement
@@ -34,15 +34,15 @@ def create_file(conn, file):
     """
     Create a new file into the files table
     :param conn: Connection object
-    :param file: file turple with (dispositivo, subclasse, local, tab_ou_tech, identificacao)
+    :param file: file turple with (local, tab_ou_tech)
     :return: file id
     """
-    sql = ''' INSERT INTO files(dispositivo, subclasse, local, tab_ou_tech, identificacao)
-              VALUES(?,?,?,?,?) '''
+    sql = ''' INSERT INTO files(local, tab_ou_tech, status)
+              VALUES(?,?,0) '''
     cur = conn.cursor()
     cur.execute(sql, file)
     return cur.lastrowid
- 
+
 
 def create_update(conn, update):
     """
@@ -66,11 +66,11 @@ def select_all_files(conn):
     """
     cur = conn.cursor()
     cur.execute("SELECT * FROM files")
- 
+
     rows = cur.fetchall()
- 
+
     return rows
-        
+
 def select_all_updates(conn):
     """
     Query all rows in the updates table
@@ -79,12 +79,12 @@ def select_all_updates(conn):
     """
     cur = conn.cursor()
     cur.execute("SELECT * FROM updates")
- 
+
     rows = cur.fetchall()
- 
+
     return rows
- 
- 
+
+
 def select_updates_by_file_id(conn, file_id):
     """
     Query rows with the selected file_id in the updates table
@@ -98,36 +98,33 @@ def select_updates_by_file_id(conn, file_id):
 
     return rows
 
-def select_specific_file(conn, dispositivo, subclasse, local, tab_ou_tech, identificacao):
+def select_specific_file(conn, local, tab_ou_tech):
     """
     Query files by all fields
     :param conn: the Connection object
     :return: all found files
-    """    
-    select_query = """SELECT * FROM files WHERE 
-                                    dispositivo=? AND
-                                    subclasse=?   AND
-                                    local=?       AND
-                                    tab_ou_tech=? AND
-                                    identificacao=?
+    """
+    select_query = """SELECT * FROM files WHERE
+                                    local=? AND
+                                    tab_ou_tech=?
                                     ;"""
 
     cur = conn.cursor()
-    cur.execute(select_query, (dispositivo, subclasse, local, tab_ou_tech, identificacao))
- 
+    cur.execute(select_query, (local, tab_ou_tech))
+
     rows = cur.fetchall()
- 
+
     return rows
 
-def specific_file_exists(conn, dispositivo, subclasse, local, tab_ou_tech, identificacao):
+def specific_file_exists(conn, local, tab_ou_tech):
     """
     Query files by all fields and returns if it exists or not
     :param conn: the Connection object
     :return: True or False and gives raise an excpetion if two or more files are found
-    """    
+    """
     # query the specific file with all fields
-    files = select_specific_file(conn, dispositivo, subclasse, local, tab_ou_tech, identificacao)
-    
+    files = select_specific_file(conn, local, tab_ou_tech)
+
     if len(files) > 1:
         print(files)
         raise NameError('Duplicated files')
@@ -135,7 +132,7 @@ def specific_file_exists(conn, dispositivo, subclasse, local, tab_ou_tech, ident
         return True
     else:
         return False
- 
+
 
 def execute(conn, query):
     """ run the selected query
