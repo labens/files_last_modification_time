@@ -126,7 +126,7 @@ def updateDB(conn):
                     last_mod_file = datetime.datetime.utcfromtimestamp(os.path.getmtime(full_file_path))
 
                     # create update and store data
-                    last_update_in_s = (current_time - last_mod_file).seconds
+                    last_update_in_s = int((current_time - last_mod_file).total_seconds())
                     try:
                         database.create_update(conn, (file_id, current_time.isoformat(), last_update_in_s))
                         new_updates += 1
